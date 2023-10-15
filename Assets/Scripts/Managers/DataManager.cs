@@ -46,6 +46,7 @@ public class DataManager
         if (CheckData(id)) // 해당 데이터(아이디)가 있으면 실패 반환
             return false;
 
+        Debug.Log(password);
         stPlayerInfo player = new stPlayerInfo(id, password);
         SaveData(player); // 데이터 저장
         return true;

@@ -17,7 +17,7 @@ public class GameRoom
 
     [Header("RoomInfo")]
     public UInt16 RoomID = 1;
-    public static UInt16 RoomInedx = 1;
+    private static UInt16 RoomIndex = 1;
     private GameRoomCharacter[] _characterOrder = new GameRoomCharacter[6];
 
 
@@ -36,15 +36,13 @@ public class GameRoom
     
     public GameRoom(GamePlayerInfo p1, GamePlayerInfo p2)
     {
-        RoomID = RoomInedx;
+        RoomID = RoomIndex; //  RoomIndex => static으로 설정
         _player1 = p1;
         _player2 = p2;
         Debug.Log($"Room {RoomID} Created");
-
-
-        SetGameRoomCharacters(p1, p2);
-        SendOtherPlayerInfo(_player1, _player2);
-        RoomInedx++;
+        SetGameRoomCharacters(p1, p2); // 게임룸 캐릭터 설정
+        SendOtherPlayerInfo(_player1, _player2); // 게임룸 정보를 플레이어에게 전송
+        RoomIndex++;
     }
 
     private void SetGameRoomCharacters(GamePlayerInfo p1, GamePlayerInfo p2)
@@ -69,25 +67,25 @@ public class GameRoom
 
         for (int i = 0; i < _characterOrder.Length; i++)
         {
-            turn[i].Id = _characterOrder[i].ID;
+            turn[i].CharacterID = _characterOrder[i].ID;
             turn[i].IsPlayer1 = _characterOrder[i].IsPlayer1;
         }
         
 
-        stBattleRoomCharactersInfo p1Info = new stBattleRoomCharactersInfo
+        stBattleRoomInfo p1Info = new stBattleRoomInfo
         {
-            MsgID = ServerData.MessageID.BattleRoomCharactersInfo,
-            PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomCharactersInfo)),
+            MsgID = ServerData.MessageID.BattleRoomInfo,
+            PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomInfo)),
             PlayerCharacters = p1.MainCharacters,
             OtherCharacters = p2.MainCharacters,
             RoomID = RoomID,
             IsPlayer1 = true,
             BattleTurn = turn
         };
-        stBattleRoomCharactersInfo p2Info = new stBattleRoomCharactersInfo
+        stBattleRoomInfo p2Info = new stBattleRoomInfo
         {
-            MsgID = ServerData.MessageID.BattleRoomCharactersInfo,
-            PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomCharactersInfo)),
+            MsgID = ServerData.MessageID.BattleRoomInfo,
+            PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomInfo)),
             PlayerCharacters = p2.MainCharacters,
             OtherCharacters = p1.MainCharacters,
             RoomID = RoomID,
@@ -95,8 +93,8 @@ public class GameRoom
             BattleTurn = turn
 
         };
-        Managers.Network.SendMsg<stBattleRoomCharactersInfo>(Managers.Network._loginedClients[p1.ID], p1Info);
-        Managers.Network.SendMsg<stBattleRoomCharactersInfo>(Managers.Network._loginedClients[p2.ID], p2Info);
+        Managers.Network.SendMsg<stBattleRoomInfo>(Managers.Network._loginedClients[p1.ID], p1Info);
+        Managers.Network.SendMsg<stBattleRoomInfo>(Managers.Network._loginedClients[p2.ID], p2Info);
 
     }
 
@@ -131,7 +129,7 @@ public class GameRoom
         _player1Ready = false;
         _player2Ready = false;
     }
-    public void GetPlayerOrder(string id, stBattleMyOrder info)
+    public void GetPlayerOrder(string id, stBattlePlayerOrder info)
     {
         if (id == _player1.ID)
         {
@@ -157,25 +155,24 @@ public class GameRoom
     }
 
 
-    private void SimulatePlayerActions()
+    private void SimulatePlayerActions() // 행동 처리
     {
         _player1Ready = false;
         _player2Ready = false;
 
-        stBattleInfo battleInfo = new stBattleInfo();
-        battleInfo.MsgID = ServerData.MessageID.BattleInfo;
+        stBattleOrdersInfo battleInfo = new stBattleOrdersInfo(); // 전투 정보(한 턴)
+        battleInfo.MsgID = ServerData.MessageID.BattleOrdersInfo;
         battleInfo.PacketSize = (ushort)Marshal.SizeOf(battleInfo);
-        battleInfo.Order = new stBattleOrder[6];
-
+        battleInfo.Order = new stBattleCharacterOrder[6]; // 전투 정보(캐릭터)
         for (int i = 0; i < _characterOrder.Length; i++)
         {
-            stBattleOrder order = new stBattleOrder();
-            order.IsMyCharacter = _characterOrder[i].IsPlayer1;
-            order.CharacterIndex = _characterOrder[i].BattleInfo.CharacterIndex;
-            order.TargetIndex = _characterOrder[i].BattleInfo.TargetIndex;
-            switch (_characterOrder[i].BattleInfo.State)
+            stBattleCharacterOrder order = new stBattleCharacterOrder();
+            order.IsMyCharacter = _characterOrder[i].IsPlayer1; // Player1 캐릭터인지
+            order.CharacterIndex = _characterOrder[i].BattleInfo.CharacterIndex; // 캐릭터 번호
+            order.TargetIndex = _characterOrder[i].BattleInfo.TargetIndex; // 공격일 경우 타겟이 누구인지
+            switch (_characterOrder[i].BattleInfo.State) // 현재는 공격, 방어, 행동 없음 3가지만 유효
             {
-                case (ushort)CharacterState.Attack:
+                case (ushort)CharacterState.Attack: // 공격일 경우
                     if (_characterOrder[i].IsPlayer1)
                     {
                         _characterOrder[i].Attack(_player2Character[_characterOrder[i].BattleInfo.TargetIndex]);
@@ -184,26 +181,22 @@ public class GameRoom
                     {
                         _characterOrder[i].Attack(_player1Character[_characterOrder[i].BattleInfo.TargetIndex]);
                     }
-
                     break;
             }
 
-            order.State = _characterOrder[i].BattleInfo.State;
-            battleInfo.Order[i] = order;
+            order.State = _characterOrder[i].BattleInfo.State; // 해당 캐릭터의 상태 저장
+            battleInfo.Order[i] = order; 
         }
 
-        battleInfo.GameState = CheckGameState();
+        battleInfo.GameState = CheckGameState(); // 게임 상태 저장
 
-        Debug.Log("SendInfo");
-        Managers.Network.SendMsg<stBattleInfo>(Managers.Network._loginedClients[_player1.ID], battleInfo);
+        // 정보 전송
+        Managers.Network.SendMsg<stBattleOrdersInfo>(Managers.Network._loginedClients[_player1.ID], battleInfo);
         for (int i = 0; i < battleInfo.Order.Length; i++)
         {
             battleInfo.Order[i].IsMyCharacter = !battleInfo.Order[i].IsMyCharacter;
         }
-
-        Managers.Network.SendMsg<stBattleInfo>(Managers.Network._loginedClients[_player2.ID], battleInfo);
-
-
+        Managers.Network.SendMsg<stBattleOrdersInfo>(Managers.Network._loginedClients[_player2.ID], battleInfo);
 
 
         switch (battleInfo.GameState)
@@ -211,16 +204,19 @@ public class GameRoom
             case ((UInt16)GameState.ContinueSelect):
                 break;
             case ((UInt16)GameState.Player1Win):
+                EndGame();
                 Debug.Log("Player 1 Win");
                 break;
             case ((UInt16)GameState.Player2Win):
+                EndGame();
                 Debug.Log("Player 2 Win");
                 break;
         }
     }
 
-    private UInt16 CheckGameState() // 동시에 두 플레이어 캐릭터가 모두 죽는 경우는 없음 0 -> 
+    private UInt16 CheckGameState() // 게임 진행 상태
     {
+        // 동시에 두 플레이어 캐릭터가 모두 죽는 경우는 없어 순차적으로 탐색
         bool isEnd = true;
         for (int i = 0; i < _player1Character.Length; i++)
         {
@@ -249,19 +245,19 @@ public class GameRoom
             return (UInt16)GameState.ContinueSelect;
     }
 
-    public void GetParticularInfo(stBattleParticualInfo info)
+    public void GetParticularInfo(stBattleParticularInfo info)
     {
-        stBattleParticualInfo particularInfo = new stBattleParticualInfo();
+        stBattleParticularInfo particularInfo = new stBattleParticularInfo();
         particularInfo.MsgID = ServerData.MessageID.BattleParticularInfo;
         particularInfo.PacketSize = (ushort)Marshal.SizeOf(particularInfo);
         particularInfo.ParticularInfo = info.ParticularInfo;
         if (info.ID == _player1.ID)
         {
-            Managers.Network.SendMsg<stBattleParticualInfo>(Managers.Network._loginedClients[_player2.ID], particularInfo);
+            Managers.Network.SendMsg<stBattleParticularInfo>(Managers.Network._loginedClients[_player2.ID], particularInfo);
         }
         else
         {
-            Managers.Network.SendMsg<stBattleParticualInfo>(Managers.Network._loginedClients[_player1.ID], particularInfo);
+            Managers.Network.SendMsg<stBattleParticularInfo>(Managers.Network._loginedClients[_player1.ID], particularInfo);
         }
 
         EndGame();
@@ -274,7 +270,8 @@ public class GameRoom
         else
         {
             Debug.Log($"Room {RoomID} has removed");
-            Managers.Network.GameRooms.Remove(RoomID);
+            
+            Managers.Network.GameRooms.TryRemove(RoomID, out _);
         }
 
     }
