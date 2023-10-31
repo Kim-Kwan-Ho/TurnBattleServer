@@ -62,6 +62,7 @@
     <Compile Include="Assets\Scripts\Network\GameRoom.cs" />
     <Compile Include="Assets\Scripts\Managers\NetworkManager.cs" />
     <Compile Include="Assets\Scripts\Managers\DataManager.cs" />
+    <Compile Include="Assets\Scripts\Managers\GameRoomManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

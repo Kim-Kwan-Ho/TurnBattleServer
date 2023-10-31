@@ -8,9 +8,7 @@ public class Managers : MonoBehaviour
     private static Managers s_instance = null;
     public static Managers Instance
     {
-        get { //Init();
-            return s_instance;
-        }
+        get { return s_instance; }
     }
 
     private NetworkManager _network = new NetworkManager();
@@ -24,7 +22,12 @@ public class Managers : MonoBehaviour
     {
         get { return Instance._data; }
     }
+    private GameRoomManager _gameRoom  = new GameRoomManager();
 
+    public static GameRoomManager GameRoom
+    {
+        get { return Instance._gameRoom; }
+    }
 
     private void Start()
     {
@@ -36,19 +39,8 @@ public class Managers : MonoBehaviour
 
     private void Init()
     {
-       //s_instance = GameObject.Find("@Managers").GetComponent<Managers>();
-        if (s_instance != null)
-        {
-            //GameObject go = GameObject.Find("@Managers");
-            //if (go == null)
-            //    go = new GameObject("@Managers");
-
-            //s_instance = go.AddComponent<Managers>();
-            //DontDestroyOnLoad(s_instance);
-            //Application.targetFrameRate = 60;
-            //s_instance._network.Init();
-        }
         _network.Init();
+        _gameRoom.Init();
     }
 
     private void OnApplicationQuit()

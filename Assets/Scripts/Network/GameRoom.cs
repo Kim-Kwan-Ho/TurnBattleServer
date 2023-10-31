@@ -1,15 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
 using ServerData;
-using PimDeWitte.UnityMainThreadDispatcher;
 using System.Linq;
 using PlayerData;
-using Unity.VisualScripting;
 using Debug = UnityEngine.Debug;
 
 public class GameRoom 
@@ -263,17 +260,10 @@ public class GameRoom
         EndGame();
 
     }
+
     private void EndGame()
     {
-        if (!Managers.Network.GameRooms.ContainsKey(RoomID))
-            return;
-        else
-        {
-            Debug.Log($"Room {RoomID} has removed");
-            
-            Managers.Network.GameRooms.TryRemove(RoomID, out _);
-        }
-
+        Managers.GameRoom.CloseGameRoom(RoomID);
     }
 
 }

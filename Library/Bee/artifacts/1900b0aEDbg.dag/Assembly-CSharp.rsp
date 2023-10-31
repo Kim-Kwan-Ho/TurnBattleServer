@@ -353,6 +353,7 @@
 "Assets/Scripts/Data/Data.Player.cs"
 "Assets/Scripts/Data/Data.Server.cs"
 "Assets/Scripts/Managers/DataManager.cs"
+"Assets/Scripts/Managers/GameRoomManager.cs"
 "Assets/Scripts/Managers/Managers.cs"
 "Assets/Scripts/Managers/NetworkManager.cs"
 "Assets/Scripts/Network/GameRoom.cs"
