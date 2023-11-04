@@ -116,6 +116,7 @@
 -define:TEXTCORE_FONT_ENGINE_1_5_OR_NEWER
 -define:CSHARP_7_OR_LATER
 -define:CSHARP_7_3_OR_NEWER
+-r:"Assets/Plugins/MySql.Data.dll"
 -r:"C:/Program Files/Unity/2021.3.20f1/Editor/Data/Managed/UnityEngine/UnityEditor.CoreModule.dll"
 -r:"C:/Program Files/Unity/2021.3.20f1/Editor/Data/Managed/UnityEngine/UnityEditor.DeviceSimulatorModule.dll"
 -r:"C:/Program Files/Unity/2021.3.20f1/Editor/Data/Managed/UnityEngine/UnityEditor.DiagnosticsModule.dll"
@@ -353,6 +354,7 @@
 "Assets/Scripts/Data/Data.Player.cs"
 "Assets/Scripts/Data/Data.Server.cs"
 "Assets/Scripts/Managers/DataManager.cs"
+"Assets/Scripts/Managers/DBManager.cs"
 "Assets/Scripts/Managers/GameRoomManager.cs"
 "Assets/Scripts/Managers/Managers.cs"
 "Assets/Scripts/Managers/NetworkManager.cs"

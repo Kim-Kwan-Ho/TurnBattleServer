@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
 using UnityEngine;
-using ServerData;
 using System.Linq;
-using PlayerData;
+using Data;
 using Debug = UnityEngine.Debug;
 
 public class GameRoom 
@@ -71,7 +70,7 @@ public class GameRoom
 
         stBattleRoomInfo p1Info = new stBattleRoomInfo
         {
-            MsgID = ServerData.MessageID.BattleRoomInfo,
+            MsgID = MessageID.BattleRoomInfo,
             PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomInfo)),
             PlayerCharacters = p1.MainCharacters,
             OtherCharacters = p2.MainCharacters,
@@ -81,7 +80,7 @@ public class GameRoom
         };
         stBattleRoomInfo p2Info = new stBattleRoomInfo
         {
-            MsgID = ServerData.MessageID.BattleRoomInfo,
+            MsgID = MessageID.BattleRoomInfo,
             PacketSize = (ushort)Marshal.SizeOf(typeof(stBattleRoomInfo)),
             PlayerCharacters = p2.MainCharacters,
             OtherCharacters = p1.MainCharacters,
@@ -117,7 +116,7 @@ public class GameRoom
     private void StartGame()
     {
         stBattleStart start = new stBattleStart();
-        start.MsgID = ServerData.MessageID.BattleStart;
+        start.MsgID = MessageID.BattleStart;
         start.PacketSize = (ushort)Marshal.SizeOf(start);
         start.Start = true;
         Managers.Network.SendMsg(Managers.Network._loginedClients[_player1.ID], start);
@@ -158,7 +157,7 @@ public class GameRoom
         _player2Ready = false;
 
         stBattleOrdersInfo battleInfo = new stBattleOrdersInfo(); // 전투 정보(한 턴)
-        battleInfo.MsgID = ServerData.MessageID.BattleOrdersInfo;
+        battleInfo.MsgID = MessageID.BattleOrdersInfo;
         battleInfo.PacketSize = (ushort)Marshal.SizeOf(battleInfo);
         battleInfo.Order = new stBattleCharacterOrder[6]; // 전투 정보(캐릭터)
         for (int i = 0; i < _characterOrder.Length; i++)
@@ -245,7 +244,7 @@ public class GameRoom
     public void GetParticularInfo(stBattleParticularInfo info)
     {
         stBattleParticularInfo particularInfo = new stBattleParticularInfo();
-        particularInfo.MsgID = ServerData.MessageID.BattleParticularInfo;
+        particularInfo.MsgID = MessageID.BattleParticularInfo;
         particularInfo.PacketSize = (ushort)Marshal.SizeOf(particularInfo);
         particularInfo.ParticularInfo = info.ParticularInfo;
         if (info.ID == _player1.ID)

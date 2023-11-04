@@ -5,21 +5,19 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
-using PlayerData;
-using ServerData;
 using Unity.VisualScripting;
 using System.Runtime.InteropServices;
 using System.Net;
 using System.Threading.Tasks;
 using UnityEngine.UIElements;
 using System.Collections.Concurrent;
-
+using Data;
 public class TCPNetworkModule
 {
     public TcpClient ClientSocket = null;
     public NetworkStream Stream = null;
-    public byte[] Bytes = new byte[ServerData.Constants.BufferSize];
-    public byte[] TempBytes = new byte[ServerData.Constants.TempBufferSize];
+    public byte[] Bytes = new byte[Constants.BufferSize];
+    public byte[] TempBytes = new byte[Constants.TempBufferSize];
 
     public string Name;
     public TCPNetworkModule(TcpClient clientSocket, string name = "client")
@@ -176,7 +174,7 @@ public class NetworkManager
 
                 for (int i = _disConnectedClients.Count - 1; i >= 0; i--)
                 {
-                    Managers.Data.LogOut(_disConnectedClients[i].Name);
+                    Managers.DB.LogOutAsync(_disConnectedClients[i].Name);
                     _connectedClients.Remove(_disConnectedClients[i]);
                     if (_loginedClients.ContainsKey(_disConnectedClients[i].Name))
                         _loginedClients.Remove(_disConnectedClients[i].Name);
@@ -228,7 +226,7 @@ public class NetworkManager
 
                             while (true)
                             {
-                                byte[] headerData = new byte[ServerData.Constants.HeaderSize];
+                                byte[] headerData = new byte[Constants.HeaderSize];
                                 Array.Copy(inData, nDataCur, headerData, 0, 6);
                                 stHeader header = GetObjectFromByte<stHeader>(headerData);
                                 if (header.PacketSize > length - nDataCur)
@@ -324,21 +322,21 @@ public class NetworkManager
         }
     }
 
-    private void IncomingDataProcess(ushort msgId, byte[] msgData, int c)
+    private async Task IncomingDataProcess(ushort msgId, byte[] msgData, int c)
     {
         switch (msgId)
         {
-            case ServerData.MessageID.LoginRegister:
+            case MessageID.LoginRegister:
             {
                 stLoginRegister info = GetObjectFromByte<stLoginRegister>(msgData);
                 if (info.IsLogin) // 로그인 여부
                 {
-                    info.Succeed = Managers.Data.Login(info.ID, info.Password); // 로그인 성공 여부
+                    info.Succeed = await Managers.DB.LoginAsync(info.ID, info.Password); // 로그인 성공 여부
                     if (info.Succeed)
                     {
                         _connectedClients[c].Name = info.ID;
                         _loginedClients.Add(info.ID, _connectedClients[c]);
-                        stPlayerInfo playerInfo = Managers.Data.GetPlayerInfo(info.ID); // 해당 플레이어 정보
+                        stPlayerInfo playerInfo = await Managers.DB.GetPlayerInfoAsync(info.ID); // 해당 플레이어 정보
                         SendMsg(_connectedClients[c], GetObjectToByte(playerInfo)); // 플레이어 정보 반환
                     }
                     else
@@ -348,20 +346,18 @@ public class NetworkManager
                 }
                 else
                 {
-                    info.Succeed =
-                        Managers.Data.Register(info.ID, info.Password); // 회원가입 성공 정보
+                    info.Succeed = await Managers.DB.RegisterAsync(info.ID, info.Password); // 회원가입 성공 정보
                     SendMsg(_connectedClients[c], GetObjectToByte(info));
                 }
-
                 break;
             }
-            case ServerData.MessageID.PlayerInfo:
+            case MessageID.PlayerInfo:
             {
                 stPlayerInfo info = GetObjectFromByte<stPlayerInfo>(msgData);
-                Managers.Data.SaveData(info.ID, info);
+                Managers.DB.SaveDataAsync(info.ID, info);
                 break;
             }
-            case ServerData.MessageID.MatchPlayerInfo:
+            case MessageID.MatchPlayerInfo:
             {
                 stMatchPlayerInfo info = GetObjectFromByte<stMatchPlayerInfo>(msgData);
                 if (info.Matching) // 매칭 요구일 경우
@@ -374,19 +370,19 @@ public class NetworkManager
                 }
                 break;
             }
-            case ServerData.MessageID.BattleReady: // 씬 로드 완료 (게임 준비 완료)
+            case MessageID.BattleReady: // 씬 로드 완료 (게임 준비 완료)
             {
                 stBattleReady info = GetObjectFromByte<stBattleReady>(msgData);
                 Managers.GameRoom.ReadyPlayerAction(info);
                 break;
             }
-            case ServerData.MessageID.BattlePlayerOrderInfo: // 플레이어 행동 정보
+            case MessageID.BattlePlayerOrderInfo: // 플레이어 행동 정보
             {
                 stBattlePlayerOrder info = GetObjectFromByte<stBattlePlayerOrder>(msgData);
                 Managers.GameRoom.GetPlayerOrderAction(info);
                 break;
             }
-            case ServerData.MessageID.BattleParticularInfo: // 게임 중 특이사항 (게임 종료, 항복)
+            case MessageID.BattleParticularInfo: // 게임 중 특이사항 (게임 종료, 항복)
             {
                 stBattleParticularInfo info = GetObjectFromByte<stBattleParticularInfo>(msgData);
                 Managers.GameRoom.GetParticularInfoAction(info);
@@ -395,6 +391,10 @@ public class NetworkManager
         }
     }
 
+    private void OnApplicationQuit()
+    {
+        CloseSocket();
+    }
     
 
 

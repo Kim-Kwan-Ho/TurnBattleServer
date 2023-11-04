@@ -23,12 +23,16 @@ public class Managers : MonoBehaviour
         get { return Instance._data; }
     }
     private GameRoomManager _gameRoom  = new GameRoomManager();
-
     public static GameRoomManager GameRoom
     {
         get { return Instance._gameRoom; }
     }
+    private DBManager _db = new DBManager();
 
+    public static DBManager DB
+    {
+        get { return Instance._db; }
+    }
     private void Start()
     {
         s_instance = this;
@@ -41,6 +45,7 @@ public class Managers : MonoBehaviour
     {
         _network.Init();
         _gameRoom.Init();
+        _db.Init();
     }
 
     private void OnApplicationQuit()

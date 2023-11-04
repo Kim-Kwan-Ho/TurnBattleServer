@@ -1,4 +1,3 @@
-using ServerData;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -6,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Data;
 
 public class GameRoomManager 
 {
@@ -104,7 +104,7 @@ public class GameRoomManager
         return new GamePlayerInfo // ID와 대표 캐릭터를 받아 GamePlayerInfo생성
         {
             ID = playerId,
-            MainCharacters = Managers.Data.PlayerInfos[playerId].MainCharacters
+            MainCharacters = Managers.DB.PlayerInfos[playerId].MainCharacters
         };
     }
 
