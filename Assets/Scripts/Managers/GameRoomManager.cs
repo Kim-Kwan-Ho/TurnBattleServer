@@ -33,7 +33,6 @@ public class GameRoomManager
             _playerAddedEvent.Set();
         }
     }
-
     public void AddCanceledMatch(string id)
     {
         if (!_canceledMatch.Contains(id))
@@ -85,8 +84,7 @@ public class GameRoomManager
             }
         }
     }
-    
-    private string GetNextMatchingPlayer()
+    private string GetNextMatchingPlayer() // 다음 플레이어 찾기
     {
         while (_matchingQueue.Count > 0)
         {
@@ -116,7 +114,6 @@ public class GameRoomManager
             action?.Invoke();
         }
     }
-
     public void CloseGameRoom(int roomId)
     {
         if (_gameRooms.TryRemove(roomId, out _))

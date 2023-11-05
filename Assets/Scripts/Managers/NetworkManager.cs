@@ -124,7 +124,7 @@ public class NetworkManager
 
     }
 
-    public void ListenForIncomingRequest()
+    public async void ListenForIncomingRequest()
     {
         try
         {
@@ -174,7 +174,7 @@ public class NetworkManager
 
                 for (int i = _disConnectedClients.Count - 1; i >= 0; i--)
                 {
-                    Managers.DB.LogOutAsync(_disConnectedClients[i].Name);
+                    await Managers.DB.LogOutAsync(_disConnectedClients[i].Name);
                     _connectedClients.Remove(_disConnectedClients[i]);
                     if (_loginedClients.ContainsKey(_disConnectedClients[i].Name))
                         _loginedClients.Remove(_disConnectedClients[i].Name);
@@ -191,7 +191,7 @@ public class NetworkManager
         }
     }
 
-    public void TcpListenForIncomingRequest()
+    public async void TcpListenForIncomingRequest()
     {
         while (true)
         {
@@ -239,7 +239,7 @@ public class NetworkManager
                                 }
                                 byte[] msgData = new byte[header.PacketSize];
                                 Array.Copy(inData, nDataCur, msgData, 0, header.PacketSize);
-                                IncomingDataProcess(header.MsgID, msgData, c);
+                                await IncomingDataProcess(header.MsgID, msgData, c);
 
                                 nDataCur += header.PacketSize;
                                 if (length == nDataCur)
@@ -354,7 +354,7 @@ public class NetworkManager
             case MessageID.PlayerInfo:
             {
                 stPlayerInfo info = GetObjectFromByte<stPlayerInfo>(msgData);
-                Managers.DB.SaveDataAsync(info.ID, info);
+                await Managers.DB.SaveDataAsync(info.ID, info);
                 break;
             }
             case MessageID.MatchPlayerInfo:

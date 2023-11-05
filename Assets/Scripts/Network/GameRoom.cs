@@ -35,7 +35,6 @@ public class GameRoom
         RoomID = RoomIndex; //  RoomIndex => static으로 설정
         _player1 = p1;
         _player2 = p2;
-        Debug.Log($"Room {RoomID} Created");
         SetGameRoomCharacters(p1, p2); // 게임룸 캐릭터 설정
         SendOtherPlayerInfo(_player1, _player2); // 게임룸 정보를 플레이어에게 전송
         RoomIndex++;

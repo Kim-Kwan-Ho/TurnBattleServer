@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using MySql.Data.MySqlClient;
 using Data;
-using Unity.VisualScripting;
 
 public class DBManager
 {
@@ -32,37 +31,36 @@ public class DBManager
             throw;
         }
     }
-
-    public async Task<bool> LoginAsync(string id, string pwd)
+    public async Task<bool> LoginAsync(string id, string pwd) // 로그인
     {
         MySqlCommand cmd = new MySqlCommand();
         cmd.Connection = _connection;
-        cmd.CommandText = $"SELECT password FROM playerinfo WHERE id = '{id}'";
+        cmd.CommandText = $"SELECT password FROM playerinfo WHERE id = '{id}'"; // id에 맞는 비밀번호 가져오기
         var result = await cmd.ExecuteScalarAsync();
-        if (result == null)
+        if (result == null) // 정보가 없을경우 실패 반환
             return false;
         else
-            return (string)result == pwd;
+            return (string)result == pwd; // 비밀번호가 맞는지 여부 반환
     }
-
-    public async Task<bool> RegisterAsync(string id, string pwd)
+    public async Task<bool> RegisterAsync(string id, string pwd) // 회원가입
     {
         try
         {
             MySqlCommand cmd = new MySqlCommand();
             cmd.Connection = _connection;
-            cmd.CommandText = $"INSERT INTO playerinfo(id,password,gold,token) VALUES('{id}','{pwd}','{Constants.PlayerRegisterGold}','{Constants.PlayerRegisterToken}');";
+            cmd.CommandText = $"INSERT INTO playerinfo(id,password,gold,token) VALUES('{id}','{pwd}'," +
+                              $"'{Constants.PlayerRegisterGold}','{Constants.PlayerRegisterToken}');"; // 플렝이어 정보 생성
             await cmd.ExecuteNonQueryAsync();
             for (int i = 0; i < Constants.MainCharacterCount; i++)
             {
-                cmd.CommandText = $"INSERT INTO maincharacters(id,indexnum) VALUES('{id}','{i}');";
+                cmd.CommandText = $"INSERT INTO maincharacters(id,indexnum) VALUES('{id}','{i}');"; // 메인 캐릭터 추가
                 await cmd.ExecuteNonQueryAsync();
             }
             return true;
         }
         catch (MySqlException e)
         {
-            if (e.Number == 1062) // 중복 키 오류
+            if (e.Number == 1062) // 해당 아이디가 있을 경우 실패 반환
             {
                 return false;
             }
@@ -73,24 +71,20 @@ public class DBManager
             }
         }
     }
-
-    public async Task<stPlayerInfo> GetPlayerInfoAsync(string id)
+    public async Task<stPlayerInfo> GetPlayerInfoAsync(string id) // 플레이어 정보 반환
     {
         stPlayerInfo info = new stPlayerInfo();
         info.MsgID = MessageID.PlayerInfo;
         info.ID = id;
         info.PacketSize = (ushort)Marshal.SizeOf(typeof(stPlayerInfo));
-
         try
         {
             MySqlCommand cmd = new MySqlCommand();
             DataSet ds = new DataSet();
-
             cmd.Connection = _connection;
             cmd.CommandText = $"SELECT * FROM playerinfo WHERE id = '{id}';";
             MySqlDataAdapter adapter = new MySqlDataAdapter(cmd);
             adapter.Fill(ds, "uInfo");
-
             info.GoldAmount = (UInt32)ds.Tables[0].Rows[0]["gold"];
             info.TokenCount = (UInt32)ds.Tables[0].Rows[0]["token"];
             info.CharacterCount = (UInt16)ds.Tables[0].Rows[0]["charactercount"];
@@ -98,10 +92,8 @@ public class DBManager
             cmd.CommandText = $"SELECT chid, chlevel, chhp, chdamage, charmor, chspd" +
                               $" FROM playerinfo JOIN maincharacters ON playerinfo.id = maincharacters.id " +
                               $"WHERE maincharacters.id ='{id}';";
-
             adapter = new MySqlDataAdapter(cmd);
             adapter.Fill(ds, "mainChInfo");
-
             stCharacterInfo[] mainChs = new stCharacterInfo[Constants.MainCharacterCount];
             for (int i = 0; i < Constants.MainCharacterCount; i++)
             {
